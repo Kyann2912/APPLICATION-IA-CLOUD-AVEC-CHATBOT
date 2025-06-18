@@ -42,7 +42,7 @@ def ask():
     prompt = ". ".join(prompt_parts)
 
     # 🔍 Recherche sémantique avec FAISS
-    docs = db_faiss.similarity_search(prompt, k=2)
+    docs = db_faiss.similarity_search(prompt, k=1)
     answers = [doc.page_content for doc in docs]
 
     return jsonify({
