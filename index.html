@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot IA Multimodal</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
+    .chat-container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .chat-box { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; background: #fff; }
+    .chat-message { margin-bottom: 10px; }
+    .user { color: blue; }
+    .bot { color: green; }
+    .input-row { display: flex; gap: 10px; }
+    input[type="text"] { flex: 1; padding: 10px; }
+    input[type="file"] { flex: 1; }
+    button { padding: 10px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h2>🤖 Chatbot IA Multimodal</h2>
+    <div class="chat-box" id="chat-box"></div>
+    
+    <div class="input-row">
+      <input type="text" id="question-input" placeholder="Pose ta question ici..." />
+      <input type="file" id="image-input" accept="image/*" />
+      <button onclick="sendMessage()">Envoyer</button>
+    </div>
+
+    <button onclick="analyzeOnlyImage()">Analyser l’image seule</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const question = document.getElementById('question-input').value;
+      const imageInput = document.getElementById('image-input');
+      const chatBox = document.getElementById('chat-box');
+
+      let imageBase64 = null;
+
+      if (imageInput.files.length > 0) {
+        const file = imageInput.files[0];
+        imageBase64 = await toBase64(file);
+      }
+
+      // Ajoute la question à l'interface
+      if (question) {
+        chatBox.innerHTML += `<div class="chat-message user">👤 ${question}</div>`;
+      }
+
+      const response = await fetch("http://localhost:8000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, image_base64: imageBase64 })
+      });
+
+      const data = await response.json();
+
+      // Ajoute la réponse à l'interface
+      data.answers.forEach(answer => {
+        chatBox.innerHTML += `<div class="chat-message bot">🤖 ${answer}</div>`;
+      });
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+      document.getElementById('question-input').value = "";
+    }
+
+    async function analyzeOnlyImage() {
+      const imageInput = document.getElementById('image-input');
+      const chatBox = document.getElementById('chat-box');
+
+      if (imageInput.files.length === 0) {
+        alert("Ajoute une image d'abord.");
+        return;
+      }
+
+      const imageBase64 = await toBase64(imageInput.files[0]);
+
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: imageBase64 })
+      });
+
+      const data = await response.json();
+      chatBox.innerHTML += `<div class="chat-message bot">🧠 Analyse image seule : ${data.resultat}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]); // remove prefix
+        reader.onerror = error => reject(error);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chatbot IA Fatou - Multimodal & Caméra</title>
+
+  <!-- Ajout Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0; padding: 20px;
+      display: flex; justify-content: center; align-items: flex-start;
+      min-height: 100vh;
+      color: #fff;
+    }
+    .chat-container {
+      width: 700px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      color: #333;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .header h2 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .btn-menu {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 22px;
+      width: 28px;
+    }
+    .btn-menu span {
+      display: block;
+      height: 3px;
+      background-color: rgba(5, 179, 248, 0.173);
+      border-radius: 2px;
+      transition: background-color 0.3s;
+      font-size: 530px;
+    }
+    .btn-menu:hover span {
+      background-color: #6c63ff;
+    }
+
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background-color: #6c63ff;
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      min-width: 160px;
+      z-index: 1000;
+    }
+    .menu-dropdown button {
+      background: transparent;
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    .menu-dropdown button:hover {
+      background-color: #5848d0;
+    }
+
+    #video-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      margin: 10px auto 20px auto;
+      border: 2px solid #6c63ff;
+      border-radius: 15px;
+      overflow: hidden;
+      background: #000;
+      display: none;
+    }
+    video {
+      position: absolute;
+      width: 640px;
+      height: 480px;
+      top: 0; left: 0;
+      object-fit: cover;
+    }
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .btn-start {
+      margin: 0 auto 15px auto;
+      padding: 10px 20px;
+      background: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    .btn-start:hover {
+      background: #5848d0;
+    }
+
+    .chat-box {
+      height: 300px;
+      overflow-y: auto;
+      background: #f4f6fb;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      box-shadow: inset 0 0 10px #ccc;
+      color: #333;
+    }
+    .chat-message {
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .user {
+      color: #1a73e8;
+      font-weight: 600;
+    }
+    .bot {
+      color: #2e7d32;
+      font-weight: 600;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline-offset: 2px;
+      outline-color: #6c63ff;
+      transition: outline-color 0.3s;
+    }
+    input[type="text"]:focus {
+      outline-color: #6c63ff;
+    }
+    input[type="file"] {
+      flex: 1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: white;
+      font-size: 0.9rem;
+    }
+    button {
+      padding: 12px 20px;
+      background: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+      user-select: none;
+    }
+    button:hover {
+      background: #5848d0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+
+  <div class="header">
+    <h2><i class="fas fa-robot"></i> Chatbot IA Fatou - Multimodal & Caméra</h2>
+    <button class="btn-menu" id="menu-btn" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="menu-dropdown" id="menu-dropdown">
+      <button id="reset-chat-btn">Réinitialiser le chat</button>
+    </div>
+  </div>
+
+  <div id="video-container">
+    <video id="video" autoplay muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <button class="btn-start" id="start-camera-btn">Démarrer la caméra et détecter les visages</button>
+
+  <div class="chat-box" id="chat-box"></div>
+
+  <div class="input-row">
+    <input type="text" id="question-input" placeholder="Pose ta question ici..." autocomplete="off" />
+    <input type="file" id="image-input" accept="image/*" />
+    <button onclick="sendMessage()">Envoyer</button>
+  </div>
+
+  <button onclick="analyzeOnlyImage()">Analyser l’image seule</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+
+<script>
+  let stream = null;
+  let canvas = null;
+  let displaySize = null;
+  let detecting = false;
+
+  const video = document.getElementById('video');
+  const overlay = document.getElementById('overlay');
+  const videoContainer = document.getElementById('video-container');
+  const startCameraBtn = document.getElementById('start-camera-btn');
+
+  async function startCameraAndDetect() {
+    if (detecting) return;
+
+    startCameraBtn.disabled = true;
+    startCameraBtn.textContent = "Chargement des modèles...";
+
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models/');
+
+    startCameraBtn.textContent = "Accès à la caméra...";
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+      video.srcObject = stream;
+    } catch (err) {
+      alert("Erreur d'accès à la caméra : " + err);
+      startCameraBtn.disabled = false;
+      startCameraBtn.textContent = "Démarrer la caméra et détecter les visages";
+      return;
+    }
+
+    videoContainer.style.display = 'block';
+
+    video.play();
+
+    if (canvas) canvas.remove();
+    canvas = faceapi.createCanvasFromMedia(video);
+    canvas.id = 'overlay';
+    videoContainer.appendChild(canvas);
+
+    displaySize = { width: video.width || 640, height: video.height || 480 };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    startCameraBtn.textContent = "Caméra démarrée - Détection en cours";
+
+    detecting = true;
+    detectFacesLoop();
+  }
+
+  async function detectFacesLoop() {
+    if (!detecting || video.paused || video.ended) return;
+
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+    const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    faceapi.draw.drawDetections(canvas, resizedDetections);
+
+    updateFaceCountMessage(detections.length);
+
+    setTimeout(detectFacesLoop, 200);
+  }
+
+  function updateFaceCountMessage(count) {
+    const chatBox = document.getElementById('chat-box');
+    const lastMsg = chatBox.lastElementChild;
+
+    const html = `<i class="fas fa-robot"></i> Fatou : Nombre de visages détectés en direct : ${count}`;
+
+    if (lastMsg && lastMsg.classList.contains('bot') && lastMsg.dataset.type === 'face-count') {
+      lastMsg.innerHTML = html;
+    } else {
+      const div = document.createElement('div');
+      div.className = 'chat-message bot';
+      div.dataset.type = 'face-count';
+      div.innerHTML = html;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  }
+
+  async function sendMessage() {
+    const question = document.getElementById('question-input').value.trim();
+    const imageInput = document.getElementById('image-input');
+    const chatBox = document.getElementById('chat-box');
+
+    let imageBase64 = null;
+
+    if (imageInput.files.length > 0) {
+      const file = imageInput.files[0];
+      imageBase64 = await toBase64(file);
+    }
+
+    if (!question && !imageBase64) return;
+
+    if (question) {
+      chatBox.innerHTML += `<div class="chat-message user"><i class="fas fa-user"></i> ${escapeHtml(question)}</div>`;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, image_base64: imageBase64 })
+      });
+
+      const data = await response.json();
+
+      data.answers.forEach(answer => {
+        const formatted = formatAnswer(answer);
+        chatBox.innerHTML += `<div class="chat-message bot"><i class="fas fa-robot"></i> ${escapeHtml(formatted)}</div>`;
+      });
+    } catch (error) {
+      chatBox.innerHTML += `<div class="chat-message bot" style="color: red;">Erreur lors de la communication avec le serveur.</div>`;
+    }
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById('question-input').value = "";
+    document.getElementById('image-input').value = "";
+  }
+
+  async function analyzeOnlyImage() {
+    const imageInput = document.getElementById('image-input');
+    const chatBox = document.getElementById('chat-box');
+
+    if (imageInput.files.length === 0) {
+      alert("Ajoute une image d'abord.");
+      return;
+    }
+
+    const imageBase64 = await toBase64(imageInput.files[0]);
+
+    try {
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: imageBase64 })
+      });
+
+      const data = await response.json();
+      chatBox.innerHTML += `<div class="chat-message bot"><i class="fas fa-brain"></i> Analyse image seule : ${escapeHtml(data.resultat)}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (error) {
+      chatBox.innerHTML += `<div class="chat-message bot" style="color: red;">Erreur lors de la communication avec le serveur.</div>`;
+    }
+  }
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  function formatAnswer(rawAnswer) {
+    const regex = /A\s*:\s*(.*)/i;
+    const match = rawAnswer.match(regex);
+    return match && match[1] ? `Fatou : ${match[1].trim()}` : `Fatou : ${rawAnswer.trim()}`;
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+      return {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m];
+    });
+  }
+
+  const menuBtn = document.getElementById('menu-btn');
+  const menuDropdown = document.getElementById('menu-dropdown');
+
+  menuBtn.addEventListener('click', () => {
+    menuDropdown.style.display = menuDropdown.style.display === 'block' ? 'none' : 'block';
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!menuBtn.contains(event.target) && !menuDropdown.contains(event.target)) {
+      menuDropdown.style.display = 'none';
+    }
+  });
+
+  document.getElementById('reset-chat-btn').addEventListener('click', () => {
+    document.getElementById('chat-box').innerHTML = '';
+    document.getElementById('question-input').value = '';
+    document.getElementById('image-input').value = '';
+
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+
+    videoContainer.style.display = 'none';
+    startCameraBtn.disabled = false;
+    startCameraBtn.textContent = "Démarrer la caméra et détecter les visages";
+
+    if (canvas) {
+      canvas.remove();
+      canvas = null;
+    }
+
+    detecting = false;
+    menuDropdown.style.display = 'none';
+  });
+
+  startCameraBtn.addEventListener('click', startCameraAndDetect);
+
+  document.getElementById('question-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
