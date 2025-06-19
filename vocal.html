@@ -224,7 +224,7 @@
 <div class="chat-container">
 
   <div class="header">
-    <h2><i class="fas fa-robot"></i> Chatbot IA Fatou - Multimodal, Caméra & Vocal</h2>
+    <h2><i class="fas fa-robot"></i> Chatbot IA Fatou - Multimodal</h2>
     <button class="btn-menu" id="menu-btn" aria-label="Menu">
       <span></span>
       <span></span>
@@ -240,7 +240,7 @@
     <canvas id="overlay"></canvas>
   </div>
 
-  <!-- <button class="btn-start" id="start-camera-btn">Démarrer la caméra et détecter les visages</button> -->
+  <button class="btn-start" id="start-camera-btn">Démarrer la caméra et détecter les visages</button>
 
   <div class="chat-box" id="chat-box"></div>
 
@@ -317,13 +317,6 @@
 
     updateFaceCountMessage(detections.length);
 
-    
-    const currentCount = detections.length;
-    if (currentCount !== lastFaceCount && currentCount > 0) {
-      lastFaceCount = currentCount;
-      const imageBase64 = captureImageFromVideo();
-      await sendToAnalyzeEndpoint(imageBase64);
-    }
     setTimeout(detectFacesLoop, 200);
   }
 
@@ -478,39 +471,6 @@
       sendMessage();
     }
   });
-
-  
-  let lastFaceCount = -1;
-
-  function captureImageFromVideo() {
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = video.videoWidth;
-    tempCanvas.height = video.videoHeight;
-    const ctx = tempCanvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-    const dataURL = tempCanvas.toDataURL("image/jpeg");
-    return dataURL.split(',')[1];
-  }
-
-  async function sendToAnalyzeEndpoint(base64Image) {
-    try {
-      const response = await fetch("http://localhost:8000/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_base64: base64Image })
-      });
-
-      const data = await response.json();
-
-      const chatBox = document.getElementById('chat-box');
-      chatBox.innerHTML += `<div class="chat-message bot"><i class="fas fa-brain"></i> Résultat analyse : ${escapeHtml(data.resultat)}</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-    } catch (error) {
-      console.error("Erreur analyse :", error);
-    }
-  }
-
 
   // ====== RECONNAISSANCE VOCALE ======
   const voiceBtn = document.getElementById('voice-btn');
