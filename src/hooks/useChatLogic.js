@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 
-const FLASK_API_URL = 'http://localhost:5000/api';
+const FLASK_API_URL = 'http://localhost:8000';
 
 export const useChatLogic = (
   messages, 
@@ -98,15 +97,26 @@ export const useChatLogic = (
     if (textOverride === null) setInputText('');
     
     const hasImage = !!selectedImage;
-    
-    if (action !== "analyze_image_only" && action !== "detect_faces") {
-        if (removeImageCallback) removeImageCallback();
-    }
 
     await simulateTyping();
 
-    const botResponseContent = await generateBotResponse(currentInputText, hasImage, action);
-    
+    let botResponseContent = "";
+    try {
+      if (action === "analyze_image_only") {
+        // Appel API /analyze
+        const imageBase64 = imagePreview?.split(',')[1];
+        const res = await callFlaskAPI("analyze", { image_base64: imageBase64 });
+        botResponseContent = res.resultat || "Aucun résultat d'analyse.";
+      } else {
+        // Appel API /ask
+        const imageBase64 = hasImage ? imagePreview?.split(',')[1] : undefined;
+        const res = await callFlaskAPI("ask", { question: currentInputText, image_base64: imageBase64 });
+        botResponseContent = (res.answers && res.answers.length > 0) ? res.answers.join('\n\n') : "Aucune réponse trouvée.";
+      }
+    } catch (error) {
+      botResponseContent = "Erreur lors de la communication avec le serveur.";
+    }
+
     const botResponse = {
       id: Date.now() + 1,
       type: 'bot',
@@ -116,9 +126,7 @@ export const useChatLogic = (
     };
     setMessages(prev => [...prev, botResponse]);
     
-    if (action === "analyze_image_only" || action === "detect_faces") {
-        if (removeImageCallback) removeImageCallback();
-    }
+    if (removeImageCallback) removeImageCallback();
   };
 
   return {
